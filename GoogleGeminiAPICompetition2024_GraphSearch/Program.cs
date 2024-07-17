@@ -66,11 +66,15 @@ public class GenerativeLanguageApi
             //var b = a / zero;
 
             /////////////////////////////////////////////////////////////////
+            
+            HttpRequestMessage httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, url);
+            httpRequestMessage.Content = httpContent;
 
             // API 호출 및 스트림 응답 처리
-            var response = await httpClient.PostAsync(url, httpContent).ConfigureAwait(true);
+            var response = await httpClient.SendAsync(httpRequestMessage);
+            //var response = await httpClient.PostAsync(url, httpContent).ConfigureAwait(true);
 
-            response.EnsureSuccessStatusCode(); // HTTP 응답에 대한 IsSuccessStatusCode 속성이 false이면 예외를 throw
+            //response.EnsureSuccessStatusCode(); // HTTP 응답에 대한 IsSuccessStatusCode 속성이 false이면 예외를 throw
 
             using (var responseStream = await response.Content.ReadAsStreamAsync())
             using (var streamReader = new System.IO.StreamReader(responseStream))
