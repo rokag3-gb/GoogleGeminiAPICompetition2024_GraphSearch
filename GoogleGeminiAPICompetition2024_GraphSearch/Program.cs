@@ -4,17 +4,30 @@ using System.Text;
 using System.Xml;
 using Newtonsoft.Json;
 
-Console.WriteLine("Hello, World!");
+public class Program
+{
+    static async Task Main(string[] args)
+    {
+        Console.WriteLine("Hello, World!");
 
-GenerativeLanguageApi g = new();
-g.Generate();
+        GenerativeLanguageApi g = new();
+        var ret = g.Generate().GetAwaiter();
+
+        //Thread.Sleep(1000 * 30);
+
+        Console.WriteLine($"ret = [{ret.GetResult()}]");
+        Console.WriteLine("Bye bye~");
+    }
+}
 
 /************************************************************************/
 
 public class GenerativeLanguageApi
 {
-    public async Task Generate()
+    public async Task<string> Generate()
     {
+        string ret = string.Empty;
+
         try
         {
             //string keyFilePath = @"gemini-cm-svc-acc-jungwoo.json";
@@ -85,19 +98,20 @@ public class GenerativeLanguageApi
                     if (!string.IsNullOrEmpty(line) && line.StartsWith("data:"))
                     {
                         var jsonData = line.Substring(5).Trim();
+                        ret += jsonData;
                         Console.WriteLine($"line.Substring(5) = {jsonData}");
                     }
                 }
             }
-        }
-        catch (HttpIOException hx)
-        {
-            Console.WriteLine($"{hx.Message}");
+
+            return ret;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"{ex.Message}");
         }
+
+        return ret;
     }
 
     private string GeneratePayload(string prompt)
