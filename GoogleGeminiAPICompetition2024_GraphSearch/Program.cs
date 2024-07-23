@@ -1,6 +1,7 @@
 ﻿using System.Data;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 using System.Xml;
 using Newtonsoft.Json;
 
@@ -9,13 +10,11 @@ public class Program
     static async Task Main(string[] args)
     {
         Console.WriteLine("Hello, World!");
-
-        GenerativeLanguageApi g = new();
-        var ret = g.Generate().GetAwaiter();
-
-        //Thread.Sleep(1000 * 30);
-
-        Console.WriteLine($"ret = [{ret.GetResult()}]");
+        
+        GenerativeLanguageApi gemini = new();
+        var data = await gemini.generateContentAsync("우주는 왜 검은 색이야? 초등학생에게 알려주듯 친근한 말투와 쉬운 내용으로 설명해줘.");
+        //var jsonData = System.Text.Json.JsonSerializer.Serialize(data);
+        Console.WriteLine($"ret = [{data}]");
         Console.WriteLine("Bye bye~");
     }
 }
@@ -24,134 +23,118 @@ public class Program
 
 public class GenerativeLanguageApi
 {
-    public async Task<string> Generate()
+    public async Task<StringBuilder> generateContentAsync(string _prompt)
     {
-        string ret = string.Empty;
+        string model = "gemini-1.5-pro";
+        string apiKey = Secret.googleGenerativeLanguageApiKey;
+        string url = $"https://generativelanguage.googleapis.com/v1/models/{model}:generateContent?key={apiKey}";
+
+        var httpClient = new HttpClient();
+
+        StringBuilder currentEvent = new StringBuilder();
 
         try
         {
-            //string keyFilePath = @"gemini-cm-svc-acc-jungwoo.json";
-            string projectId = "gemini-cm";
-            string location = "us-central1"; // Iowa(아이오와)
-            string token = string.Empty;
-            string model = "gemini-1.5-pro";
-            string apiKey = Secret.googleGenerativeLanguageApiKey;
-
-            // HTTP 클라이언트 설정
-            using HttpClient httpClient = new HttpClient();
-            //httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            //httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
-            //httpClient.DefaultRequestHeaders.Add("Content-Type", "application/json; charset=UTF-8");
-
-            // 요청 URL 설정
-            string url = $"https://generativelanguage.googleapis.com/v1/models/{model}:generateContent?key={apiKey}";
-
-            // 요청 메시지 생성
-            var prompt = "안녕 반가워. 너랑 친구가 되고 싶어. 친구랑 대화하듯이 친근한 말투와 반말로 대답해줄래? 너 이름이 뭐니?";
-            prompt = "Why is the sky blue ?";
-            //Logger.log($"{prompt}");
-
-            var requestContent = GeneratePayload(prompt);
-
-            //var jsonRequestContent = JsonConvert.SerializeObject(requestContent);
-            var httpContent = new StringContent(requestContent, Encoding.UTF8, "application/json");
-
-            /////////////////////////////////////////////////////////////////
-
-            //HttpMessage http = new HttpMessage(url, "application/json; charset=UTF-8", "text/event-stream", null);
-
-            //Stream responseStream = await http.HttpPostAsyncStream("", requestContent);
-
-            //using (StreamReader reader = new StreamReader(responseStream, Encoding.UTF8))
-            //{
-            //    // 응답 스트림을 비동기적으로 읽어오기
-            //    char[] buffer = new char[8192];
-            //    int charsRead;
-            //    while ((charsRead = await reader.ReadAsync(buffer, 0, buffer.Length)) > 0)
-            //    {
-            //        string content = new string(buffer, 0, charsRead);
-            //        Console.Write(content);
-            //    }
-            //}
-
-            var a = 1;
-            var zero = 0;
-            //var b = a / zero;
-
-            /////////////////////////////////////////////////////////////////
-            
-            HttpRequestMessage httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, url);
-            httpRequestMessage.Content = httpContent;
-
-            // API 호출 및 스트림 응답 처리
-            var response = await httpClient.SendAsync(httpRequestMessage);
-            //var response = await httpClient.PostAsync(url, httpContent).ConfigureAwait(true);
-
-            //response.EnsureSuccessStatusCode(); // HTTP 응답에 대한 IsSuccessStatusCode 속성이 false이면 예외를 throw
-
-            using (var responseStream = await response.Content.ReadAsStreamAsync())
-            using (var streamReader = new System.IO.StreamReader(responseStream))
+            var requestBody = new
             {
-                while (!streamReader.EndOfStream)
+                contents = new[]
+            {
+                new
                 {
-                    var line = await streamReader.ReadLineAsync();
-                    if (!string.IsNullOrEmpty(line) && line.StartsWith("data:"))
+                    parts = new[]
                     {
-                        var jsonData = line.Substring(5).Trim();
-                        ret += jsonData;
-                        Console.WriteLine($"line.Substring(5) = {jsonData}");
+                        new { text = _prompt }
                     }
+                }
+            },
+                generationConfig = new
+                {
+                    temperature = 0.9,
+                    topK = 1,
+                    topP = 1,
+                    maxOutputTokens = 2048,
+                    stopSequences = new string[] { }
+                },
+                safetySettings = new object[] { },
+            };
+
+            var jsonContent = System.Text.Json.JsonSerializer.Serialize(requestBody);
+            var httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+
+            var request = new HttpRequestMessage(HttpMethod.Post, url)
+            {
+                Content = httpContent,
+                Headers = { { "Accept", "text/event-stream" } }
+            };
+
+            using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            using var stream = await response.Content.ReadAsStreamAsync();
+            using var reader = new StreamReader(stream);
+
+            string line;
+            //StringBuilder currentEvent = new StringBuilder();
+
+            while ((line = await reader.ReadLineAsync()) != null)
+            {
+                //Console.WriteLine($"line = {line}");
+
+                if (string.IsNullOrEmpty(line))
+                {
+                    if (currentEvent.Length > 0)
+                    {
+                        //ProcessEvent(currentEvent.ToString());
+                        currentEvent.Clear();
+                    }
+                }
+                else
+                {
+                    currentEvent.AppendLine(line);
                 }
             }
 
-            return ret;
+            return currentEvent;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"{ex.Message}");
+            throw ex;
         }
 
-        return ret;
+        return currentEvent;
     }
 
-    private string GeneratePayload(string prompt)
+    void ProcessEvent(string eventData)
     {
-        var part = new Part
+        var lines = eventData.Split('\n');
+        string data = "";
+
+        foreach (var line in lines)
         {
-            Text = prompt,
-        };
+            if (line.StartsWith("data: "))
+            {
+                data = line.Substring(6);
+                break;
+            }
+        }
 
-        var content = new Content
+        if (!string.IsNullOrEmpty(data) && data != "[DONE]")
         {
-            Role = "USER",
-            Parts = new List<Part> { part }
-        };
+            try
+            {
+                var jsonResponse = System.Text.Json.JsonSerializer.Deserialize<JsonElement>(data);
 
-        var root = new Root
-        {
-            Contents = new List<Content> { content }
-        };
-
-        string json = JsonConvert.SerializeObject(root, Newtonsoft.Json.Formatting.Indented);
-
-        Console.WriteLine($"{json}");
-
-        return json;
+                if (jsonResponse.TryGetProperty("candidates", out var candidates) && candidates.GetArrayLength() > 0 &&
+                    candidates[0].TryGetProperty("content", out var content) &&
+                    content.TryGetProperty("parts", out var parts) && parts.GetArrayLength() > 0 &&
+                    parts[0].TryGetProperty("text", out var text)
+                    )
+                {
+                    Console.Write(text.GetString());
+                }
+            }
+            catch (System.Text.Json.JsonException ex)
+            {
+                Console.WriteLine($"JSON parsing error: {ex.Message}");
+            }
+        }
     }
-}
-
-public class Part
-{
-    public string Text { get; set; }
-}
-
-public class Content
-{
-    public string Role { get; set; }
-    public List<Part> Parts { get; set; }
-}
-
-public class Root
-{
-    public List<Content> Contents { get; set; }
 }
