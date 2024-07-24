@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "GoogleGeminiAPICompetition2024_GraphSearch": {
+      "commandName": "Project"
+    },
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    }
+  }
+}

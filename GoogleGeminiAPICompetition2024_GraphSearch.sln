@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoogleGeminiAPICompetition2024_GraphSearch", "GoogleGeminiAPICompetition2024_GraphSearch\GoogleGeminiAPICompetition2024_GraphSearch.csproj", "{A1DDEE0A-9AA5-451A-AE34-3447566B15B7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GenerativeLanguageApiTest", "GoogleGeminiAPICompetition2024_GraphSearch\GenerativeLanguageApiTest.csproj", "{A1DDEE0A-9AA5-451A-AE34-3447566B15B7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GraphSearchAPI", "GraphSearchAPI\GraphSearchAPI.csproj", "{49151A76-48FF-4053-B65A-F26E4D6F54FD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{A1DDEE0A-9AA5-451A-AE34-3447566B15B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1DDEE0A-9AA5-451A-AE34-3447566B15B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1DDEE0A-9AA5-451A-AE34-3447566B15B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49151A76-48FF-4053-B65A-F26E4D6F54FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49151A76-48FF-4053-B65A-F26E4D6F54FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49151A76-48FF-4053-B65A-F26E4D6F54FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49151A76-48FF-4053-B65A-F26E4D6F54FD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
