@@ -8,7 +8,8 @@ public class Program
     {
         Console.WriteLine("Hello, Gemini!");
 
-        var prompt = "바이든이 사퇴했어. 앞으로 미국 대선은 어떤 양상으로 전개될까? 뉴스 앵커같은 말투로 알려줘.";
+        //var prompt = "바이든이 사퇴했어. 앞으로 미국 대선은 어떤 양상으로 전개될까? 뉴스 앵커같은 말투로 알려줘.";
+        var prompt = "하하 그거 그러케 하는거 아닌데 ㅋㅋㄹㅃㅃ";
 
         GenerativeLanguageApi gemini = new();
 
